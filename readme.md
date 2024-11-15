@@ -1,3 +1,16 @@
+## Note
+
+The project is a fork of Daniel Amthauer's UE4-HardwareBreakpointsPlugin  
+[Daniel's post on public Unreal Engine forum](https://forums.unrealengine.com/t/free-hardware-breakpoints-a-plugin-to-let-you-set-data-breakpoints-on-any-variable-bp-or-c/210251)  
+[Original repo](https://bitbucket.org/damthauer/ue4-hardwarebreakpointsplugin/src/master/)  
+
+Daniel Amthauer's approved the fork creation. :)
+
+The aim of the fork is to add and improve support of certain features:
+- [ ] Port to UE5
+- [ ] Add support for easy calls in immediate window of VS debugger
+
+# BELOW IS ORIGINAL README
 # Hardware Breakpoints
 ![UE4](https://img.shields.io/badge/UE4-4.24%2B-orange)
 
