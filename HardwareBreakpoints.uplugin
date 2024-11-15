@@ -1,0 +1,24 @@
+{
+  "FileVersion": 3,
+  "Version": 2,
+  "VersionName": "1.2",
+  "FriendlyName": "Hardware Breakpoints",
+  "Description": "Adds blueprint nodes and C++ functions to place hardware breakpoints on Unreal object properties and functions",
+  "Category": "Debugging",
+  "CreatedBy": "Daniel Amthauer",
+  "CreatedByURL": "twitter.com/damthauer",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "HardwareBreakpoints",
+      "Type": "Runtime",
+      "LoadingPhase": "PreLoadingScreen",
+      "WhitelistPlatforms": [ "Win64" ]
+    }
+  ]
+}
