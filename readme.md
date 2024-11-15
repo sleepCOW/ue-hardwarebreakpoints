@@ -9,6 +9,10 @@ Daniel Amthauer's approved the fork creation. :)
 The aim of the fork is to add and improve support of certain features:
 - [ ] Port to UE5
 - [ ] Add support for easy calls in immediate window of VS debugger
+- [ ] Update and link example project
+
+Changes to the original repo:
+* Stripped example projects for easier integration
 
 # BELOW IS ORIGINAL README
 # Hardware Breakpoints
