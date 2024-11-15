@@ -7,7 +7,7 @@ The project is a fork of Daniel Amthauer's UE4-HardwareBreakpointsPlugin
 Daniel Amthauer's approved the fork creation. :)
 
 The aim of the fork is to add and improve support of certain features:
-- [ ] Port to UE5
+- [x] Port to UE5
 - [ ] Add support for easy calls in immediate window of VS debugger
 - [ ] Update and link example project
 
