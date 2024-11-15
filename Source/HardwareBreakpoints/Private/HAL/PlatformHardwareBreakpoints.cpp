@@ -3,10 +3,10 @@
 #include "HAL/PlatformHardwareBreakpoints.h"
 #include "Misc/ScopeExit.h"
 #include "Runtime/Launch/Resources/Version.h"
-#if ENGINE_MINOR_VERSION >= 20
-#include "GenericPlatform/GenericPlatformMath.h"
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20
+	#include "GenericPlatform/GenericPlatformMath.h"
 #else
-#include "GenericPlatformMath.h"
+	#include "GenericPlatformMath.h"
 #endif
 
 //This stuff depends on the value of MAX_HARDWARE_BREAKPOINTS which is defined per platform, so this has to be here instead of in GenericPlatformHardwareBreakpoints.cpp

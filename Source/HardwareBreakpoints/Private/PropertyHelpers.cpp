@@ -6,6 +6,9 @@
 #include "UObject/Class.h"
 #include "Engine/UserDefinedStruct.h"
 #include "UObject/MetaData.h"
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20
+#include "UObject/UnrealTypePrivate.h"
+#endif
 
 namespace PropertyHelpers
 {
@@ -23,9 +26,9 @@ namespace PropertyHelpers
 	//Names for UserDefinedStruct properties are of the form DisplayName_<digit>_<32 digit number>
 	//So we assume that finding the second underscore from the end gives us the display name length
 	//We could just strip 35 characters from the right but if the name format was changed by Epic we wouldn't find out
-	bool ParsedDisplayNameMatches(UProperty* UserDefinedStructProp, const ANSICHAR* FieldName, int FieldNameLen)
+	bool ParsedDisplayNameMatches(PropertyType* UserDefinedStructProp, const ANSICHAR* FieldName, int FieldNameLen)
 	{
-#if ENGINE_MINOR_VERSION >= 21
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 21
 		ANSICHAR FullName [NAME_SIZE];
 		UserDefinedStructProp->GetFName().GetPlainANSIString(FullName);
 #else
@@ -59,7 +62,7 @@ namespace PropertyHelpers
 		return i == FieldNameLen;
 	}
 
-	UProperty* FindBPStructField(UUserDefinedStruct* Owner, const FString& FieldName)
+	PropertyType* FindBPStructField(UUserDefinedStruct* Owner, const FString& FieldName)
 	{
 		if (FieldName.Len() == 0)
 		{
@@ -89,7 +92,7 @@ namespace PropertyHelpers
 #else
 		ANSICHAR* AnsiFieldName = TCHAR_TO_ANSI(*FieldName);
 		// Search by comparing display names
-		for (TFieldIterator<UProperty>It(Owner); It; ++It)
+		for (TFieldIterator<PropertyType>It(Owner); It; ++It)
 		{
 			if (ParsedDisplayNameMatches(*It, AnsiFieldName, FieldName.Len()))
 			{
@@ -121,7 +124,7 @@ namespace PropertyHelpers
 				}
 				else
 				{
-#if ENGINE_MINOR_VERSION >= 25
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25
 					PropertyAndIndex.Property = FindFProperty<FProperty>(InStruct, *TruncatedPropertyName);
 #else
 					PropertyAndIndex.Property = FindField<UProperty>(InStruct, *TruncatedPropertyName);
@@ -135,7 +138,7 @@ namespace PropertyHelpers
 					{
 						TCHAR NumberBuffer[11];
 						FMemory::Memcpy(NumberBuffer, &PropertyName[OpenIndex + 1], sizeof(TCHAR) * NumberLength);
-#if ENGINE_MINOR_VERSION >= 20
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20
 						LexFromString(PropertyAndIndex.ArrayIndex, NumberBuffer);
 #else
 						Lex::FromString(PropertyAndIndex.ArrayIndex, NumberBuffer);
@@ -147,7 +150,7 @@ namespace PropertyHelpers
 			}
 		}
 
-#if ENGINE_MINOR_VERSION >= 25
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25
 		PropertyAndIndex.Property = FindFProperty<FProperty>(InStruct, *PropertyName);
 #else
 		PropertyAndIndex.Property = FindField<UProperty>(InStruct, *PropertyName);
@@ -165,13 +168,13 @@ namespace PropertyHelpers
 
 			if (PropertyAndIndex.ArrayIndex != INDEX_NONE)
 			{
-				UArrayProperty* ArrayProp = CastChecked<UArrayProperty>(PropertyAndIndex.Property);
+				const ArrayPropertyType* ArrayProp = CAST_PROPERTY<ArrayPropertyType>(PropertyAndIndex.Property);
 
 				FScriptArrayHelper ArrayHelper(ArrayProp, ArrayProp->ContainerPtrToValuePtr<void>(BasePointer));
 
 				if (ArrayHelper.IsValidIndex(PropertyAndIndex.ArrayIndex))
 				{
-					UStructProperty* InnerStructProp = Cast<UStructProperty>(ArrayProp->Inner);
+					StructPropertyType* InnerStructProp = Cast<StructPropertyType>(ArrayProp->Inner);
 					if (InnerStructProp && InPropertyNames.IsValidIndex(Index + 1))
 					{
 						BasePointer = ArrayHelper.GetRawPtr(PropertyAndIndex.ArrayIndex);
@@ -186,7 +189,7 @@ namespace PropertyHelpers
 					}
 				}
 			}
-			else if (UStructProperty* StructProp = Cast<UStructProperty>(PropertyAndIndex.Property))
+			else if (StructPropertyType* StructProp = CAST_PROPERTY<StructPropertyType>(PropertyAndIndex.Property))
 			{
 				NewAddress.Property = StructProp;
 				NewAddress.Address = BasePointer;
@@ -204,7 +207,7 @@ namespace PropertyHelpers
 					break;
 				}
 			}
-			else if (UObjectProperty* ObjectProp = Cast<UObjectProperty>(PropertyAndIndex.Property))
+			else if (UObjectPropertyType* ObjectProp = CAST_PROPERTY<UObjectPropertyType>(PropertyAndIndex.Property))
 			{
 				NewAddress.Property = ObjectProp;
 				NewAddress.Address = BasePointer;

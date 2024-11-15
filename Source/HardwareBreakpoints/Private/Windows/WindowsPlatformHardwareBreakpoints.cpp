@@ -15,7 +15,7 @@
 #include "WindowsPlatformHardwareBreakpointsUser.h"
 #include "Misc/HWBP_Build.h"
 
-#if ENGINE_MINOR_VERSION >= 20
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20
 #include "HardwareBreakpointsLog.h"
 #include "HWBP_Dialogs.h"
 #include "CallStackViewer.h"
@@ -298,18 +298,26 @@ bool FWindowsPlatformHardwareBreakpoints::RemoveAllHardwareBreakpoints()
 	return Data.RegistersChanged;
 }
 
+extern COREUOBJECT_API FNativeFuncPtr GNatives[];
+
 namespace HardwareBreakpointsUtils
 {
 	inline bool AddressIsBlueprintFunctionCall(PVOID Address)
 	{
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25
+		// UObject::ProcessInternal no longer exported from UObject module
+		// Because of that we try another heuristic based on closest function (execLocalVariable) defined after UObject::ProcessInternal
+		auto Diff = (uint8*)Address - (uint8*)GNatives[EX_LocalVariable];
+		// #TODO: Test the empirical length, maybe it's worth to make function lookup in dll
+		const int EmpiricalLengthOf_ProcessInternal_Function = 8000;
+#else
 		//This works only because UObject::ProcessInternal is a static function
 		//If it were a member function, we couldn't do this trick
 		auto Diff = (uint8*)Address - (uint8*)&UObject::ProcessInternal;
-
 		//This doesn't need to be that precise
 		//We could get the actual size of the function, but it would require the user to have engine symbols installed, and to load those symbols
 		const int EmpiricalLengthOf_ProcessInternal_Function = 3000;
-
+#endif
 		return Diff >= 0 && Diff < EmpiricalLengthOf_ProcessInternal_Function;
 	}
 
@@ -361,7 +369,7 @@ namespace HardwareBreakpointsUtils
 	{
 		OutRegisterIndex = -1;
 #if DO_BLUEPRINT_GUARD
-#if ENGINE_MINOR_VERSION > 25
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25
 		const TArray<const FFrame*>& ScriptStack = FBlueprintContextTracker::Get().GetScriptStack();
 #else
 		TArray<const FFrame*>& ScriptStack = FBlueprintExceptionTracker::Get().ScriptStack;
@@ -459,7 +467,7 @@ namespace HardwareBreakpointsUtils
 			FPlatformStackWalk::ProgramCounterToSymbolInfo(StackTrace[i], StackTraceSymbolInfo[i].SymbolInfo);
 		}
 #if DO_BLUEPRINT_GUARD
-#if ENGINE_MINOR_VERSION > 25
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25
 		const TArray<const FFrame*>& ScriptStack = FBlueprintContextTracker::Get().GetScriptStack();
 #else
 		TArray<const FFrame*>& ScriptStack = FBlueprintExceptionTracker::Get().ScriptStack;

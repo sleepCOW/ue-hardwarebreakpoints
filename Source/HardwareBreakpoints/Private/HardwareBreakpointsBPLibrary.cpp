@@ -10,6 +10,9 @@
 #include "CallStackViewer.h"
 #include "HWBP_Dialogs.h"
 #include "HardwareBreakpointsLog.h"
+#if ENGINE_MAJOR_VERSION >= 5
+#include "UObject/UnrealTypePrivate.h"
+#endif
 
 using namespace PropertyHelpers;
 
@@ -58,7 +61,7 @@ void UHardwareBreakpointsBPLibrary::SetFloatDataBreakpointWithCondition(UObject*
 		return;
 	}
 	//Only works on float properties
-	if (Cast<UFloatProperty>(PropertyAddress.Property) == nullptr)
+	if (CAST_PROPERTY<FloatPropertyType>(PropertyAddress.Property) == nullptr)
 	{
 		UE_LOG(LogHardwareBreakpoints, Error, TEXT("Set Float Data Breakpoint With Condition called on a property that doesn't point to a float value %s"), *PropertyPath);
 		bSuccess = false;
@@ -89,7 +92,7 @@ void UHardwareBreakpointsBPLibrary::SetIntDataBreakpointWithCondition(UObject* O
 		return;
 	}
 	//Only works on float properties
-	if (Cast<UIntProperty>(PropertyAddress.Property) == nullptr)
+	if (CAST_PROPERTY<IntPropertyType>(PropertyAddress.Property) == nullptr)
 	{
 		UE_LOG(LogHardwareBreakpoints, Error, TEXT("Set Int Data Breakpoint With Condition called on a property that doesn't point to an int value %s"), *PropertyPath);
 		bSuccess = false;
@@ -119,7 +122,7 @@ void UHardwareBreakpointsBPLibrary::SetNaNDataBreakpoint(UObject* Object, FStrin
 		return;
 	}
 	//Only works on float properties
-	if (Cast<UFloatProperty>(PropertyAddress.Property) == nullptr)
+	if (CAST_PROPERTY<FloatPropertyType>(PropertyAddress.Property) == nullptr)
 	{
 		UE_LOG(LogHardwareBreakpoints, Error, TEXT("Set NaN Data Breakpoint called on a property that doesn't point to a float value %s"), *PropertyPath);
 		bSuccess = false;

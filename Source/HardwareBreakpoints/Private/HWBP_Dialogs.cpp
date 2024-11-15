@@ -6,19 +6,20 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Runtime/Launch/Resources/Version.h"
-#if ENGINE_MINOR_VERSION >= 20
-#include "Widgets/Layout/SUniformGridPanel.h"
-#include "Widgets/Layout/SScrollBox.h"
-#else
-#include "Layout/SUniformGridPanel.h"
-#include "Layout/SScrollBox.h"
-#endif
 #include "SlateOptMacros.h"
 #include "HAL/PlatformApplicationMisc.h"
 
 #include "HardwareBreakpointsLog.h"
 #include "Slate/HWBP_Styles.h"
 #include "Slate/HWBP_StyleContainer.h"
+
+#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20
+	#include "Widgets/Layout/SUniformGridPanel.h"
+	#include "Widgets/Layout/SScrollBox.h"
+#else
+	#include "Layout/SUniformGridPanel.h"
+	#include "Layout/SScrollBox.h"
+#endif
 
 DECLARE_DELEGATE_TwoParams(FOnMsgDlgResult, const TSharedRef<SWindow>&, EAppReturnType::Type);
 
