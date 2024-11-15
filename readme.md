@@ -14,6 +14,8 @@ The aim of the fork is to add and improve support of certain features:
 Changes to the original repo:
 * Stripped example projects for easier integration
 
+Note project is aimed on developers, I'm not planning on testing and/or distributing the precompiled version.
+
 # BELOW IS ORIGINAL README
 # Hardware Breakpoints
 ![UE4](https://img.shields.io/badge/UE4-4.24%2B-orange)
