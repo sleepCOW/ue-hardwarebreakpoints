@@ -302,25 +302,6 @@ extern COREUOBJECT_API FNativeFuncPtr GNatives[];
 
 namespace HardwareBreakpointsUtils
 {
-	inline bool AddressIsBlueprintFunctionCall(PVOID Address)
-	{
-#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25
-		// UObject::ProcessInternal no longer exported from UObject module
-		// Because of that we try another heuristic based on closest function (execLocalVariable) defined after UObject::ProcessInternal
-		auto Diff = (uint8*)Address - (uint8*)GNatives[EX_LocalVariable];
-		// #TODO: Test the empirical length, maybe it's worth to make function lookup in dll
-		const int EmpiricalLengthOf_ProcessInternal_Function = 8000;
-#else
-		//This works only because UObject::ProcessInternal is a static function
-		//If it were a member function, we couldn't do this trick
-		auto Diff = (uint8*)Address - (uint8*)&UObject::ProcessInternal;
-		//This doesn't need to be that precise
-		//We could get the actual size of the function, but it would require the user to have engine symbols installed, and to load those symbols
-		const int EmpiricalLengthOf_ProcessInternal_Function = 3000;
-#endif
-		return Diff >= 0 && Diff < EmpiricalLengthOf_ProcessInternal_Function;
-	}
-
 	inline bool AddressIsWatchedNativeFunctionCall(PVOID Address, PCONTEXT ContextRecord, int& OutRegisterIndex)
 	{
 		auto DebugRegisters = &ContextRecord->Dr0;
@@ -365,32 +346,21 @@ namespace HardwareBreakpointsUtils
 		return Count;
 	}
 
-	void FindRegisterForBPFunction(PCONTEXT ContextRecord, int& OutRegisterIndex)
+	// Returns debug register index or INDEX_NONE if not found
+	int32 FindRegisterForBPFunction(PCONTEXT ContextRecord)
 	{
-		OutRegisterIndex = -1;
-#if DO_BLUEPRINT_GUARD
-#if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25
-		const TArray<const FFrame*>& ScriptStack = FBlueprintContextTracker::Get().GetScriptStack();
-#else
-		TArray<const FFrame*>& ScriptStack = FBlueprintExceptionTracker::Get().ScriptStack;
-#endif
+		const FFrame* ScriptStack = FFrame::GetThreadLocalTopStackFrame();
+
 		auto* DebugRegisters = &ContextRecord->Dr0;
 
 		for (int i = 0; i < 4; ++i)
 		{
-			if ((uint8*)DebugRegisters[i] == ScriptStack[ScriptStack.Num() - 1]->Code)
+			if ((uint8*)DebugRegisters[i] == ScriptStack->Code)
 			{
-				OutRegisterIndex = i;
-				return;
+				return i;
 			}
 		}
-#endif
-		int LastActiveRegister;
-		int Count = CountActiveDebugRegisters(ContextRecord, LastActiveRegister);
-		if (Count == 1)
-		{
-			OutRegisterIndex = LastActiveRegister;
-		}
+		return INDEX_NONE;
 	}
 
 	static bool WaitingForSingleStep = false;
@@ -584,22 +554,20 @@ LONG WINAPI HardwareBreakpointsExceptionHandler(struct _EXCEPTION_POINTERS *Exce
 		FMemory::Memcpy(CurrentDebugRegisters, OldDebugRegisters, sizeof(*CurrentDebugRegisters) * 6);
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
-	
-	int OutRegisterIndex;
 
 	HANDLE DumpThreadHandle = GetCurrentThread();
 	void* ContextWrapper = FWindowsPlatformStackWalk::MakeThreadContextWrapper(ExceptionInfo->ContextRecord, DumpThreadHandle);
 	CONTEXT* ContextRecord = ExceptionInfo->ContextRecord;
 
-	if (AddressIsBlueprintFunctionCall(ExceptionInfo->ExceptionRecord->ExceptionAddress))
+	int32 OutRegisterIndex = FindRegisterForBPFunction(ContextRecord);
+	if (const bool bBlueprintFunctionCall = OutRegisterIndex != INDEX_NONE)
 	{
-		FindRegisterForBPFunction(ContextRecord, OutRegisterIndex);
-
 		DumpStackIfEnabled(ContextRecord, ContextWrapper, OutRegisterIndex);
 		WindowsPlatformHardwareBreakpoints::CaughtBlueprintFunctionBreakpoint();
 		ProcessBreakpointClearing(ExceptionInfo);
-
-		bool BreakpointIsStillActive = AddressIsBlueprintFunctionCall(ExceptionInfo->ExceptionRecord->ExceptionAddress);
+		
+		OutRegisterIndex = FindRegisterForBPFunction(ContextRecord); // #TODO: Do I need to check a new context?
+		const bool BreakpointIsStillActive = OutRegisterIndex != INDEX_NONE;
 		if (BreakpointIsStillActive)
 		{
 			if (OutRegisterIndex != -1)
