@@ -30,6 +30,26 @@ public:
 DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FHWBP_FloatCondition, float, OldValue, float, NewValue);
 DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FHWBP_IntCondition, int, OldValue, int, NewValue);
 
+/**
+ * Exposed API for setting breakpoints in the debugger (accessible via the Immediate Window in Visual Studio).
+ *
+ * @note The breakpoint set is delayed until the next frame.
+ * #TODO: Investigate ways to eliminate or minimize this delay (e.g., detecting when the debugger resumes the thread).
+ */
+extern "C" HARDWAREBREAKPOINTS_API bool SetDataBreakpoint(UObject* Object, TCHAR* PropertyPath);
+extern "C" HARDWAREBREAKPOINTS_API bool SetFunctionBreakpoint(UClass* Class, TCHAR* FunctionName);
+extern "C" HARDWAREBREAKPOINTS_API bool AnyHardwareBreakpointSet();
+extern "C" HARDWAREBREAKPOINTS_API void ClearAllHardwareBreakpoints();
+
+// Aliases for convenience
+
+// Alias for SetDataBreakpoint
+extern "C" inline HARDWAREBREAKPOINTS_API bool BP(UObject* Object, TCHAR* PropertyPath) { return SetDataBreakpoint(Object, PropertyPath); };
+// Alias for SetFunctionBreakpoint
+extern "C" inline HARDWAREBREAKPOINTS_API bool BPFunc(UClass* Class, TCHAR* FunctionName) { return SetFunctionBreakpoint(Class, FunctionName); };
+// Alias for ClearAllHardwareBreakpoints
+extern "C" inline HARDWAREBREAKPOINTS_API void ClearBP() { ClearAllHardwareBreakpoints(); }
+
 /*
 	This library provides functions to easily control hardware breakpoints programmatically from Blueprints or C++.
 	

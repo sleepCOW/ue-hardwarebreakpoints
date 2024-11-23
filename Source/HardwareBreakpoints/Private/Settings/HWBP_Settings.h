@@ -14,7 +14,7 @@ class UHWBP_Settings : public UObject
 	
 public:
 	UPROPERTY(config, EditAnywhere, Category = HardwareBreakpoints, meta = (DisplayName = "Don't show callstack window if debugger is attached"))
-	bool DontShowCallstackWindowIfDebuggerAttached;
+	bool DontShowCallstackWindowIfDebuggerAttached = true;
 
 	UPROPERTY(config, EditAnywhere, Category = HardwareBreakpoints, meta = (DisplayName = "Don't break even if debugger is attached"))
 	bool DontBreakEvenIfDebuggerAttached;

@@ -24,6 +24,55 @@ static void ShowPropertyNotFoundMessageDialog(FString PropertyPath, UObject* Obj
 #undef LOCTEXT_NAMESPACE
 }
 
+static UWorld* GetCurrentGameWorld()
+{
+	for (TObjectIterator<UWorld> It; It; ++It)
+	{
+		// Most likely we want game or PIE world
+		if (It->WorldType == EWorldType::Game || It->WorldType == EWorldType::PIE)
+			return *It;
+	}
+
+	// fallback to GWorld as Editor world
+	return GWorld;
+}
+
+bool SetDataBreakpoint(UObject* Object, TCHAR* PropertyPath)
+{
+	FString Path = PropertyPath;
+	GetCurrentGameWorld()->GetTimerManager().SetTimerForNextTick([Object, Path]()
+	{
+		bool bResult = false;
+		FHardwareBreakpointHandle Unused;
+		UHardwareBreakpointsBPLibrary::SetDataBreakpoint(Object, Path, bResult, Unused);
+		//return bResult;
+	});
+	return true;
+}
+
+bool SetFunctionBreakpoint(UClass* Class, TCHAR* FunctionName)
+{
+	FName FuncName = FunctionName;
+	GetCurrentGameWorld()->GetTimerManager().SetTimerForNextTick([Class, FuncName]()
+	{
+		bool bResult = false;
+		FHardwareBreakpointHandle Unused;
+		UHardwareBreakpointsBPLibrary::SetFunctionBreakpoint(Class, FuncName, bResult, Unused);
+	//return bResult;
+	});
+	return true;
+}
+
+bool AnyHardwareBreakpointSet()
+{
+	return FPlatformHardwareBreakpoints::AnyBreakpointSet();
+}
+
+void ClearAllHardwareBreakpoints()
+{
+	UHardwareBreakpointsBPLibrary::ClearAllHardwareBreakpoints();
+}
+
 void UHardwareBreakpointsBPLibrary::SetDataBreakpoint(UObject* Object, FString PropertyPath, bool& bSuccess, FHardwareBreakpointHandle& BreakpointHandle)
 {
 	if (Object == nullptr)
