@@ -8,7 +8,8 @@ Daniel Amthauer's approved the fork creation. :)
 
 The aim of the fork is to add and improve support of certain features:
 - [x] Port to UE5
-- [ ] Add support for easy calls in immediate window of VS debugger
+- [x] Add support for easy calls in immediate window of VS debugger
+- [ ] Fix immediate window calls for breakpoints are delayed on 1 frame because calling functions in debugger has limitations on context manipulations
 - [ ] Update and link example project
 
 Changes to the original repo:
