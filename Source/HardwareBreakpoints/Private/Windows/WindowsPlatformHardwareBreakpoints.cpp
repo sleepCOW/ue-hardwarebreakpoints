@@ -237,6 +237,21 @@ bool FWindowsPlatformHardwareBreakpoints::IsBreakpointSet(DebugRegisterIndex Ind
 	return DebugRegisters[Index] != 0;
 }
 
+bool FWindowsPlatformHardwareBreakpoints::IsAnyRegistersContainOurBreakpointAddress(const void* BreakpointAddress, struct _EXCEPTION_POINTERS* ExceptionInfo)
+{
+	DWORD64* IntegerRegisters = &ExceptionInfo->ContextRecord->Rax;
+
+	for (int32 i = 0; i < 16; ++i)
+	{
+		if (BreakpointAddress == (void*)IntegerRegisters[i])
+		{
+			return true;
+		}
+	}
+				
+	return false;
+}
+
 bool FWindowsPlatformHardwareBreakpoints::AnyBreakpointSet()
 {
 	using namespace HardwareBreakpointsUtils;
@@ -598,7 +613,7 @@ LONG WINAPI HardwareBreakpointsExceptionHandler(struct _EXCEPTION_POINTERS *Exce
 			WaitingForSingleStep = true;
 		}
 	}
-	else if (FPlatformHardwareBreakpoints::CheckDataBreakpointConditions(OutRegisterIndex))
+	else if (FPlatformHardwareBreakpoints::CheckDataBreakpointConditions(OutRegisterIndex, ExceptionInfo))
 	{
 		DumpStackIfEnabled(ContextRecord, ContextWrapper, OutRegisterIndex);
 		WindowsPlatformHardwareBreakpoints::CaughtDataBreakpoint();

@@ -91,7 +91,9 @@ struct HARDWAREBREAKPOINTS_API FGenericPlatformHardwareBreakpoints
 	//Internal
 	static void RemoveBreakpointAssociatedData(DebugRegisterIndex Index);
 	static void RemoveAllBreakpointAssociatedData();
-	static bool CheckDataBreakpointConditions(DebugRegisterIndex& OutRegisterIndex);
+
+	// #TODO: Remove Windows _EXCEPTION_POINTERS from generic struct
+	static bool CheckDataBreakpointConditions(DebugRegisterIndex& OutRegisterIndex, struct _EXCEPTION_POINTERS *ExceptionInfo);
 
 protected:
 

@@ -26,6 +26,7 @@ struct HARDWAREBREAKPOINTS_API FWindowsPlatformHardwareBreakpoints : public FGen
 	static bool RemoveAllHardwareBreakpoints();
 	static void AddStructuredExceptionHandler();
 	static void RemoveStructuredExceptionHandler();
+	static bool IsAnyRegistersContainOurBreakpointAddress(const void* BreakpointAddress, struct _EXCEPTION_POINTERS* ExceptionInfo);
 
 	static int32 GetSymbolDisplacementForProgramCounter(uint64 ProgramCounter);
 	static uint64 GetAddressFromSymbolName(const CHAR* SymbolName);

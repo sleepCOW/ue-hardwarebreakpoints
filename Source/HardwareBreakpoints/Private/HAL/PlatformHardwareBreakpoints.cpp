@@ -1,6 +1,7 @@
 // Copyright Daniel Amthauer. All Rights Reserved.
 
 #include "HAL/PlatformHardwareBreakpoints.h"
+
 #include "Misc/ScopeExit.h"
 #include "Runtime/Launch/Resources/Version.h"
 #if ENGINE_MAJOR_VERSION >= 5 || ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 20
@@ -40,7 +41,7 @@ void FGenericPlatformHardwareBreakpoints::RemoveAllBreakpointAssociatedData()
 }
 
 PRAGMA_DISABLE_OPTIMIZATION
-bool FGenericPlatformHardwareBreakpoints::CheckDataBreakpointConditions(int& OutRegisterIndex)
+bool FGenericPlatformHardwareBreakpoints::CheckDataBreakpointConditions(int& OutRegisterIndex, struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
 	const int maxBreakpoints = MAX_HARDWARE_BREAKPOINTS;
 	for (int i = 0; i < maxBreakpoints; ++i)
@@ -52,7 +53,26 @@ bool FGenericPlatformHardwareBreakpoints::CheckDataBreakpointConditions(int& Out
 			//So if it's different, then we can assume it's because this breakpoint was hit
 			//If it has a condition, we evaluate that instead of just returning true
 			//We still check other breakpoints if this one's condition fails, because other breakpoints might have been modified at once
-			if (FMemory::Memcmp(DataBreakpointInfo[i].LastValue, DataBreakpointInfo[i].Address, DataBreakpointInfo[i].Size) != 0)
+
+			// @sleepCOW: We need to implement a more accurate method to determine the cause of breakpoints. 
+			// The current implementation overlooks cases where memory is written with the same value, 
+			// which I have found to be problematic.
+			//
+			// A proper solution would involve analyzing the address where the exception occurred, 
+			// disassembling the previous instruction to identify where the address was stored, 
+			// and comparing it with the saved address in `DataBreakpointInfo`. 
+			// However, this approach is hard to implement, and I'm lazy to go the long way for not so much benefit.
+			//
+			// As a simpler (but potentially error-prone) alternative, 
+			// I use a heuristic that searches through integer registers (where the address of 
+			// the variable might have been stored). If a match is found, we can, with a certain 
+			// degree of probability, infer that the breakpoint corresponds to the data breakpoint we set.
+			//
+			// Potential false positives include:
+			// 1. Cases where the value matches because a function stores the address into a register 
+			//    without actually writing to it.
+			const void* BreakpointAddress = DataBreakpointInfo[i].Address;
+			if (FPlatformHardwareBreakpoints::IsAnyRegistersContainOurBreakpointAddress(BreakpointAddress, ExceptionInfo) || FMemory::Memcmp(DataBreakpointInfo[i].LastValue, BreakpointAddress, DataBreakpointInfo[i].Size) != 0)
 			{
 				//If the breakpoint has a weak reference to an owning object, verify that it's still valid
 				//This is so we don't fire a data breakpoint on an object only because it's being freed
