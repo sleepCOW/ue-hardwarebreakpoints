@@ -174,7 +174,7 @@ namespace PropertyHelpers
 
 				if (ArrayHelper.IsValidIndex(PropertyAndIndex.ArrayIndex))
 				{
-					StructPropertyType* InnerStructProp = Cast<StructPropertyType>(ArrayProp->Inner);
+					StructPropertyType* InnerStructProp = CAST_PROPERTY<StructPropertyType>(ArrayProp->Inner);
 					if (InnerStructProp && InPropertyNames.IsValidIndex(Index + 1))
 					{
 						BasePointer = ArrayHelper.GetRawPtr(PropertyAndIndex.ArrayIndex);
