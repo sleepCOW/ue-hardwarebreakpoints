@@ -1,3 +1,5 @@
+### Supported versions:
+![Supported version](https://img.shields.io/badge/UE-5.4.4-green)
 ## Note
 
 The project is a fork of Daniel Amthauer's UE4-HardwareBreakpointsPlugin  
